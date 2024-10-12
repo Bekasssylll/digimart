@@ -1,14 +1,19 @@
+from django.contrib.auth.models import User
 from django.db.models.functions import Coalesce
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status
+from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated,IsAdminUser
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from mart.models import App, Author, AppRating, AppComment, Cart, CartProduct, UserProfile, DiscountUser, Discount
 from rest_framework.viewsets import ModelViewSet
 from mart.serializers import AppSerializer, AppRatingSerializer, AppCommentSerializer, CartSerializer, \
-    CartProductSerializer, UserProfileSerializer, DiscountUserSerializer, DiscountSerializer
+    CartProductSerializer, UserProfileSerializer, DiscountUserSerializer, DiscountSerializer, UserRegistrationSerializer
 from django.db.models import Avg, Value, Count
 
 
@@ -90,3 +95,36 @@ class DiscountUserViewSet(ModelViewSet):
 class DiscountViewSet(ModelViewSet):
     queryset = Discount.objects.all()
     serializer_class = DiscountSerializer
+
+
+class UserRegistrationView(APIView):
+    def post(self, request):
+        serializer = UserRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Пользователь успешно зарегистрирован!"}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# @api_view(['GET'])
+# def export_users_to_file(request):
+#     file_path = 'users_list.txt'
+#
+#     # Открываем файл для записи
+#     with open(file_path, 'w') as file:
+#         users = User.objects.all()
+#         for user in users:
+#             file.write(f'Username: {user.username}, Email: {user.email}\n')
+#
+#     return Response({"message": f"Данные пользователей записаны в файл: {file_path}"})
+#
+
+class export_users_to_file(APIView):
+    permission_classes = [IsAdminUser,]
+    def get(self,request):
+        file_path = 'userlist.txt'
+        with open(file_path,'w') as file:
+            users = User.objects.all()
+            for user in users:
+                file.write(f'Username: {user.username}, Email: {user.email}\n')
+        return Response({"message": f"Данные пользователей записаны в файл: {file_path}"})

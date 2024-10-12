@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer
@@ -70,6 +71,11 @@ class CartProductSerializer(serializers.ModelSerializer):
         model = CartProduct
         fields = ['app', 'quantity', 'cart']
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['cart'] = instance.cart.user.username
+        return representation
+
 
 class CartSerializer(serializers.ModelSerializer):
     total_price_with_discount = serializers.SerializerMethodField()
@@ -79,6 +85,11 @@ class CartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
         fields = ['user', 'products', 'total_price_with_discount', 'total_price_without_discount']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['user']  = instance.user.username
+        return representation
 
     def get_total_price_without_discount(self, obj):
         total = 0
@@ -126,3 +137,28 @@ class DiscountSerializer(ModelSerializer):
     class Meta:
         model = Discount
         fields = ['name', 'percent']
+
+
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password2 = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        fields = ('username', 'password', 'email', 'first_name', 'last_name','password2')
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password2']:
+            raise serializers.ValidationError({"password": "Пароли не совпадают."})
+        return attrs
+
+    def create(self, validated_data):
+        user = User.objects.create(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name']
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
