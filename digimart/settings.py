@@ -16,22 +16,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 import logging
 import os
 import environ
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'loggers': {
-        'django.db.backends': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-        },
-    },
-}
+#
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'handlers': {
+#         'console': {
+#             'class': 'logging.StreamHandler',
+#         },
+#     },
+#     'loggers': {
+#         'django.db.backends': {
+#             'handlers': ['console'],
+#             'level': 'DEBUG',
+#         },
+#     },
+# }
 
 env = environ.Env()
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
@@ -110,11 +110,11 @@ WSGI_APPLICATION = 'digimart.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env("db_name"),
-        'USER': env("db_user"),
-        'PASSWORD': env("db_password"),
-        'HOST': 'localhost',
-        'PORT': '',
+        'NAME': 'prediction',
+        'USER': 'prediction',
+        'PASSWORD': 'prediction',
+        'HOST': 'postgres_db',
+        'PORT': '5432',
     }
 }
 
@@ -170,7 +170,7 @@ REST_FRAMEWORK = {
     #     'rest_framework_simplejwt.authentication.JWTAuthentication',
     # ),
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     ]
 }
 
